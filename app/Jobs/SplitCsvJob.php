@@ -11,7 +11,7 @@ use App\Jobs\ProcessCsvChunkJob;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
-class DivideCsvJob implements ShouldQueue
+class SplitCsvJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -47,6 +47,6 @@ class DivideCsvJob implements ShouldQueue
 
     public function failed(Exception $exception)
     {
-        Log::error('Job DivideCsvJob falhou: ' . $exception->getMessage());
+        Log::error('Job SplitCsvJob falhou: ' . $exception->getMessage());
     }
 }

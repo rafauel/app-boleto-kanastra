@@ -20,13 +20,15 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     libonig-dev \
     libxml2-dev \
-    redis-tools 
+    redis-tools \
+    sqlite3 \
+    libsqlite3-dev
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd sockets
+RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd sockets pdo_sqlite
 
 # Install and enable redis extension
 RUN pecl install redis \
@@ -55,9 +57,6 @@ RUN mkdir -p storage/framework/{cache,sessions,views} && \
     chmod -R 775 bootstrap/cache && \
     chown -R www-data:www-data storage && \
     chown -R www-data:www-data bootstrap/cache
-
-# Install Laravel dependencies
-RUN composer install --prefer-dist --no-scripts --no-autoloader && composer dump-autoload --optimize
 
 # Switch to non-root user
 USER $user

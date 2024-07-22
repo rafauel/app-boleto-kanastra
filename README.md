@@ -1,66 +1,137 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# Sistema de Processamento de Boletos
 
-## About Laravel
+Este projeto é um sistema de processamento de boletos que permite o upload de arquivos CSV, valida e processa os dados contidos nos arquivos e despacha jobs para geração de boletos e envio de emails.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Requisitos
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Docker
+- Docker Compose
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Configuração
 
-## Learning Laravel
+### Passo 1: Clonar o Repositório
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Clone este repositório para a sua máquina local usando o seguinte comando:
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+```sh
+git clone https://github.com/seu-usuario/nome-do-repositorio.git
+cd nome-do-repositorio
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Passo 2: Configurar as Variáveis de Ambiente
 
-## Laravel Sponsors
+Renomeie o arquivo `.env.example` para `.env` as configurações estão feitas a carater de teste local.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```sh
+cp .env.example .env
+```
 
-### Premium Partners
+### Passo 3: Construir e Iniciar os Contêineres
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Execute o seguinte comando para construir e iniciar os contêineres Docker:
 
-## Contributing
+```sh
+docker-compose up --build -d
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Passo 4: Instalar Dependências
 
-## Code of Conduct
+Acesse o contêiner da aplicação e instale as dependências do Laravel usando o Composer:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```sh
+docker-compose exec app bash
+composer install
+```
 
-## Security Vulnerabilities
+### Passo 5: Gerar a Chave da Aplicação
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Dentro do contêiner da aplicação, gere a chave da aplicação Laravel:
 
-## License
+```sh
+php artisan key:generate
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Passo 6: Executar as Migrações
+
+Execute as migrações para criar as tabelas no banco de dados:
+
+```sh
+php artisan migrate
+```
+
+## Executando a Aplicação
+
+A aplicação deve estar acessível em [http://localhost:8989](http://localhost:8989).
+
+## Endpoints
+
+### Upload de Arquivo CSV
+
+- **URL:** `/api/upload`
+- **Método:** `POST`
+- **Parâmetros:**
+  - `files[]` (obrigatório): Arquivo(s) CSV para upload.
+
+### Exemplo de Requisição
+
+Use uma ferramenta como o Postman ou `curl` para testar o upload de arquivos CSV.
+
+```sh
+curl -X POST http://localhost:8989/api/upload   -F 'files[]=@path/to/your/input.csv'
+```
+
+## Testes
+
+### Executar Testes
+
+Para executar os testes, use o seguinte comando:
+
+```sh
+docker-compose exec app bash
+php artisan test
+```
+
+### Estrutura de Testes
+
+- **Testes Unitários:** Verificam componentes individuais do sistema.
+- **Testes de Integração:** Verificam o funcionamento conjunto de múltiplos componentes.
+
+## Estrutura do Projeto
+
+```plaintext
+app
+├── Console
+├── Exceptions
+├── Http
+│   ├── Controllers
+│   ├── Middleware
+├── Jobs
+├── Models
+├── Providers
+├── Services
+bootstrap
+config
+database
+├── factories
+├── migrations
+├── seeders
+public
+resources
+routes
+tests
+├── Feature
+├── Unit
+```
+
+## Contribuição
+
+1. Faça um fork do projeto.
+2. Crie uma branch para sua feature (`git checkout -b feature/fooBar`).
+3. Faça commit das suas alterações (`git commit -am 'Add some fooBar'`).
+4. Faça push para a branch (`git push origin feature/fooBar`).
+5. Crie um novo Pull Request.
+
+## Licença
+
+Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.

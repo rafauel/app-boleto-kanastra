@@ -39,7 +39,7 @@ class ReprocessFailedJobs implements ShouldQueue
                     $boleto->update(['email_sent' => true]);
                 }
             } catch (Exception $e) {
-                // Logue o erro, se necessário
+                // podemos inserir um log aqui!
             }
         }
     }

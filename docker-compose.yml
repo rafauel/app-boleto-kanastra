@@ -13,17 +13,19 @@ services:
             - ./:/var/www
         depends_on:
             - redis
-            - db
         networks:
             - laravel
         environment:
-            - DB_CONNECTION=pgsql
-            - DB_HOST=db
-            - DB_PORT=5432
-            - DB_DATABASE=kanastra
-            - DB_USERNAME=postgres
-            - DB_PASSWORD=secret
+            - DB_CONNECTION=sqlite
+            - DB_DATABASE=/var/www/database/database.sqlite
             - QUEUE_CONNECTION=redis
+        command: >
+            sh -c "
+                composer install &&
+                php artisan key:generate &&
+                php artisan migrate --force &&
+                php-fpm
+            "
 
     # Nginx
     nginx:
@@ -73,22 +75,6 @@ services:
     redis:
         container_name: kanastra-redis
         image: redis:latest
-        networks:
-            - laravel
-
-    # Banco de Dados PostgreSQL
-    db:
-        container_name: kanastra-db
-        image: postgres:12
-        restart: unless-stopped
-        environment:
-            POSTGRES_DB: kanastra
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: secret
-        volumes:
-            - ./.docker/postgres/data:/var/lib/postgresql/data
-        ports:
-            - "5432:5432"
         networks:
             - laravel
 

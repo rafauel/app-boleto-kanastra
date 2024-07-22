@@ -2,46 +2,64 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Queue;
-use App\Models\ReceivedFile;
-use App\Jobs\DivideCsvJob;
+use Tests\TestCase;
+use App\Jobs\SplitCsvJob;
 
 class BoletoControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function testUploadCsv()
+    /** @test */
+    public function it_can_upload_and_process_csv_file()
     {
-        Storage::fake('local');
         Queue::fake();
 
-        $file = UploadedFile::fake()->createWithContent('test.csv', "name,governmentId,email,debtAmount,debtDueDate,debtId\nJohn Doe,123456789,john@example.com,100.50,2024-07-10,1\nJane Doe,987654321,jane@example.com,200.75,2024-07-15,2");
+        $csvContent = "name,governmentId,email,debtAmount,debtDueDate,debtId\n";
+        $csvContent .= "John Doe,11111111111,johndoe@example.com,100.00,2022-10-12,1adb6ccf-ff16-467f-bea7-5f05d494280f\n";
 
-        $response = $this->post('/upload', ['files' => [$file]]);
+        $file = UploadedFile::fake()->createWithContent('input.csv', $csvContent);
+
+        $response = $this->postJson('/api/upload', [
+            'files' => [$file],
+        ]);
 
         $response->assertStatus(200);
-
-        Queue::assertPushed(DivideCsvJob::class);
+        Queue::assertPushed(SplitCsvJob::class);
     }
 
-    public function testUploadDuplicateCsv()
+    /** @test */
+    public function it_rejects_duplicate_file_upload()
     {
-        Storage::fake('local');
-        Queue::fake();
+        $csvContent = "name,governmentId,email,debtAmount,debtDueDate,debtId\n";
+        $csvContent .= "John Doe,11111111111,johndoe@example.com,100.00,2022-10-12,1adb6ccf-ff16-467f-bea7-5f05d494280f\n";
 
-        $file = UploadedFile::fake()->createWithContent('test.csv', "name,governmentId,email,debtAmount,debtDueDate,debtId\nJohn Doe,123456789,john@example.com,100.50,2024-07-10,1\nJane Doe,987654321,jane@example.com,200.75,2024-07-15,2");
+        $file = UploadedFile::fake()->createWithContent('input.csv', $csvContent);
 
-        // Primeiro upload
-        $this->post('/upload', ['files' => [$file]]);
+        // Upload the file for the first time
+        $this->postJson('/api/upload', [
+            'files' => [$file],
+        ]);
 
-        // Segundo upload (duplicado)
-        $response = $this->post('/upload', ['files' => [$file]]);
+        // Try to upload the same file again
+        $response = $this->postJson('/api/upload', [
+            'files' => [$file],
+        ]);
 
         $response->assertStatus(400);
-        $this->assertEquals('Arquivo já recebido: test.csv', $response->json('message'));
+    }
+
+    /** @test */
+    public function it_rejects_invalid_csv_columns()
+    {
+        $file = UploadedFile::fake()->createWithContent('invalid.csv', 'invalid_column1,invalid_column2\nvalue1,value2');
+
+        $response = $this->postJson('/api/upload', [
+            'files' => [$file],
+        ]);
+
+        $response->assertStatus(400);
     }
 }

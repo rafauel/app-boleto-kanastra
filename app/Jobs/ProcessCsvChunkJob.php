@@ -40,7 +40,6 @@ class ProcessCsvChunkJob implements ShouldQueue
             try {
                 $rowData = array_combine($this->header, $row);
 
-                // Valida se debtAmount é numérico, pode conter outras validações tbm
                 if (!is_numeric($rowData['debtAmount'])) {
                     ProcessingLog::create([
                         'debtId' => $rowData['debtId'] ?? null,
@@ -69,7 +68,6 @@ class ProcessCsvChunkJob implements ShouldQueue
             }
         }
 
-        // Batch insert
         if (!empty($boletosData)) {
             DB::table('boletos')->upsert($boletosData, ['debtId'], ['name', 'governmentId', 'email', 'debtAmount', 'debtDueDate', 'updated_at']);
         }
@@ -92,14 +90,12 @@ class ProcessCsvChunkJob implements ShouldQueue
                     'debtId' => $boleto->debtId,
                     'message' => 'Erro ao processar boleto: ' . $e->getMessage()
                 ]);
-                // Não falha o job aqui, apenas registra o erro
             }
         }
     }
 
     public function failed(Exception $exception)
     {
-        // Aqui você pode enviar uma notificação, logar ou tomar qualquer outra ação necessária quando o job falhar.
         Log::error("Job falhou no chunk $this->chunkIndex: " . $exception->getMessage());
     }
 }
